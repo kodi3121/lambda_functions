@@ -3,12 +3,15 @@ version: 0.2
 phases:
   build:
     commands:
-    - echo "This is build phase... Zipping my lambda function"
-    - zip -r deployment_package.zip lambda_function.py
+      - echo "This is build phase... Zipping my lambda function"
+      - zip -r deployment_package.zip lambda_function.py
+      - ls -al # Verify the zip file is created
+
   post_build:
     commands:
-    - echo "Deploying to the Lambda"
-    - aws lambda update-function-code --function-name  lambda-function-demo --zip-file fileb://deployment_package.zip
+      - echo "Deploying to the Lambda"
+      - aws lambda update-function-code --function-name lambda-function-demo --zip-file fileb://$(pwd)/deployment_package.zip
+
 artifacts:
   type: zip
   paths:
