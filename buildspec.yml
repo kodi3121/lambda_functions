@@ -15,4 +15,4 @@ phases:
 artifacts:
   type: zip
   paths:
-    - deployment_package.zip
+    - '*'
