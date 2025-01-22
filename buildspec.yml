@@ -1,0 +1,42 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+    commands:
+      - echo Installing AWS CLI...
+      - apt-get update -y
+      - apt-get install -y awscli unzip
+
+  pre_build:
+    commands:
+      - echo Preparing for build...
+      - echo AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+      - echo AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+      - echo STACK_NAME=my-cloudformation-template
+
+  build:
+    # commands:
+    #   # Upload Lambda code to S3
+    #   - echo "Uploading Lambda code to S3..."
+    #   - aws s3 cp lambda/lambda-code.zip s3://$S3_BUCKET_NAME/lambda-code.zip
+
+    #   # Upload Glue script to S3
+    #   - echo "Uploading Glue script to S3..."
+    #   - aws s3 cp glue/my-glue-script.py s3://$S3_BUCKET_NAME/glue-scripts/my-glue-script.py
+
+      # Deploy CloudFormation stack
+      - echo "Deploying CloudFormation stack..."
+      - aws cloudformation deploy \
+          --stack-name $STACK_NAME \
+          --template-file cloudformation/cloudformation-template.yaml \
+          --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+
+  post_build:
+    commands:
+      - echo "Build completed successfully."
+
+artifacts:
+  files:
+    - '**/*'
