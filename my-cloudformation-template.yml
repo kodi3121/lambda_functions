@@ -4,16 +4,16 @@ Resources:
   MyS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: my-cloudformation-s3-bucket
+      BucketName: s3-bucket-kodisri
 
   # Lambda Function
   MyLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: my-lambda-function
+      FunctionName: my-lambda-function-kodisri
       Handler: index.handler
       Code:
-        S3Bucket: my-cloudformation-s3-bucket
+        S3Bucket: s3-bucket-kodisri
         S3Key: lambda-code.zip
       Runtime: nodejs14.x
 
@@ -21,43 +21,43 @@ Resources:
   MyGlueJob:
     Type: AWS::Glue::Job
     Properties:
-      Name: my-glue-job
+      Name: my-glue-job-kodisri
       Command:
         Name: glueetl
-        ScriptLocation: s3://my-cloudformation-s3-bucket/glue-scripts/my-glue-script.py
+        ScriptLocation: s3://s3-bucket-kodisri/glue-scripts/my-glue-script.py
       MaxCapacity: 10
 
   # Step Functions State Machine
   MyStepFunctionsStateMachine:
     Type: AWS::StepFunctions::StateMachine
     Properties:
-      StateMachineName: my-step-functions-state-machine
+      StateMachineName: my-step-functions-kodisri
       DefinitionString: '{"StartAt": "HelloWorld", "States": {"HelloWorld": {"Type": "Pass", "Result": "Hello, World!", "End": true}}}'
 
   # EventBridge Bus
   MyEventBridgeBus:
     Type: AWS::Events::EventBus
     Properties:
-      Name: my-event-bus
+      Name: my-event-kodisri
 
   # EventBridge Rule
   MyEventBridgeRule:
     Type: AWS::Events::Rule
     Properties:
-      Name: my-event-rule
+      Name: my-event-rule-kodisri
       EventBusName: !Ref MyEventBridgeBus
       EventPattern:
         source:
           - "aws.s3"
       Targets:
-        - Arn: arn:aws:lambda:REGION:ACCOUNT_ID:function:my-lambda-function
+        - Arn: arn:aws:lambda:eu-north-1:195275650552:function:my-lambda-function-kodisri
           Id: LambdaTarget
 
   # CloudWatch Alarm
   MyCloudWatchAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: my-cloudwatch-alarm
+      AlarmName: my-cloudwatch-kodisri
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
@@ -70,13 +70,13 @@ Resources:
   MySNSTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: my-sns-topic
+      TopicName: my-sns-kodisri
 
   # SNS Subscription
   MySNSSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      Endpoint: your-email@example.com
+      Endpoint: pavansri2222@gmail.com
       Protocol: email
       TopicArn: !Ref MySNSTopic
 
@@ -84,20 +84,20 @@ Resources:
   MySQSQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: my-sqs-queue
+      QueueName: my-sqs-queue-kodisri
 
   # Secrets Manager Secret
   MySecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: my-secret
+      Name: my-secret-kodisri
       SecretString: '{"username":"admin","password":"mypassword123"}'
 
   # API Gateway
   MyApiGateway:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: my-api-gateway
+      Name: my-api-gateway-kodisri
       Description: "My API Gateway"
 
   # API Gateway Resource
