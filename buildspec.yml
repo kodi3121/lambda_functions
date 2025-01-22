@@ -4,13 +4,15 @@ phases:
   build:
     commands:
       - echo "This is build phase... Zipping my lambda function"
-      - zip -r deployment_package.zip lambda_function.py
-      - ls -al # List files to verify the zip file is created
+      - zip -r /tmp/deployment_package.zip lambda_function.py
+      - ls -al /tmp  # List files to verify the zip file is created
 
   post_build:
     commands:
+      - echo "Listing files in post-build phase"
+      - ls -al /tmp  # Ensure the zip file is in /tmp directory
       - echo "Deploying to the Lambda"
-      - aws lambda update-function-code --function-name lambda-function-demo --zip-file fileb://deployment_package.zip
+      - aws lambda update-function-code --function-name lambda-function-demo --zip-file fileb:///tmp/deployment_package.zip
 
 artifacts:
   type: zip
