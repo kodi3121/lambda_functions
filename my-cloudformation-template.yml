@@ -1,137 +1,59 @@
----
 AWSTemplateFormatVersion: 2010-09-09
 Resources:
+  # S3 Bucket
   MyS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: my-cloudformation-s3-bucket
-  MyLambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: LambdaExecutionPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - logs:*
-                  - sns:Publish
-                Resource:
-                  - arn:aws:s3:::${MyS3Bucket}/*
-                  - arn:aws:logs:*:*:*
-                  - arn:aws:sns:REGION:ACCOUNT_ID:MySNSTopic
+
+  # Lambda Function
   MyLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: my-lambda-function
       Handler: index.handler
-      Role: MyLambdaExecutionRole.Arn
       Code:
         S3Bucket: my-cloudformation-s3-bucket
         S3Key: lambda-code.zip
       Runtime: nodejs14.x
-  MyGlueExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: glue.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: GlueExecutionPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                  - s3:ListBucket
-                  - logs:*
-                Resource:
-                  - arn:aws:s3:::${MyS3Bucket}/*
-                  - arn:aws:logs:*:*:*
+
+  # Glue Job
   MyGlueJob:
     Type: AWS::Glue::Job
     Properties:
       Name: my-glue-job
-      Role: MyGlueExecutionRole.Arn
       Command:
         Name: glueetl
         ScriptLocation: s3://my-cloudformation-s3-bucket/glue-scripts/my-glue-script.py
       MaxCapacity: 10
-  MyStepFunctionsRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: states.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: StepFunctionsExecutionPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource: arn:aws:lambda:REGION:ACCOUNT_ID:function:my-lambda-function
+
+  # Step Functions State Machine
   MyStepFunctionsStateMachine:
     Type: AWS::StepFunctions::StateMachine
     Properties:
       StateMachineName: my-step-functions-state-machine
-      RoleArn: MyStepFunctionsRole.Arn
-      DefinitionString: '{"StartAt": "HelloWorld", "States": {"HelloWorld": {"Type":
-        "Pass", "Result": "Hello, World!", "End": true}}}'
-  MyEventBridgeRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: events.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: EventBridgeExecutionPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource: arn:aws:lambda:REGION:ACCOUNT_ID:function:my-lambda-function
+      DefinitionString: '{"StartAt": "HelloWorld", "States": {"HelloWorld": {"Type": "Pass", "Result": "Hello, World!", "End": true}}}'
+
+  # EventBridge Bus
   MyEventBridgeBus:
     Type: AWS::Events::EventBus
     Properties:
       Name: my-event-bus
+
+  # EventBridge Rule
   MyEventBridgeRule:
     Type: AWS::Events::Rule
     Properties:
       Name: my-event-rule
-      EventBusName: MyEventBridgeBus
+      EventBusName: !Ref MyEventBridgeBus
       EventPattern:
         source:
-          - aws.s3
+          - "aws.s3"
       Targets:
         - Arn: arn:aws:lambda:REGION:ACCOUNT_ID:function:my-lambda-function
           Id: LambdaTarget
+
+  # CloudWatch Alarm
   MyCloudWatchAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -143,45 +65,57 @@ Resources:
       Threshold: 80
       Period: 300
       EvaluationPeriods: 1
-      AlarmActions:
-        - arn:aws:sns:REGION:ACCOUNT_ID:MySNSTopic
+
+  # SNS Topic
   MySNSTopic:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: my-sns-topic
+
+  # SNS Subscription
   MySNSSubscription:
     Type: AWS::SNS::Subscription
     Properties:
       Endpoint: your-email@example.com
       Protocol: email
-      TopicArn: MySNSTopic
+      TopicArn: !Ref MySNSTopic
+
+  # SQS Queue
   MySQSQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: my-sqs-queue
+
+  # Secrets Manager Secret
   MySecret:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: my-secret
       SecretString: '{"username":"admin","password":"mypassword123"}'
+
+  # API Gateway
   MyApiGateway:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: my-api-gateway
-      Description: My API Gateway
+      Description: "My API Gateway"
+
+  # API Gateway Resource
   MyApiGatewayResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      ParentId: MyApiGateway.RootResourceId
+      ParentId: !GetAtt MyApiGateway.RootResourceId
       PathPart: mypath
-      RestApiId: MyApiGateway
+      RestApiId: !Ref MyApiGateway
+
+  # API Gateway Method
   MyApiGatewayMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       HttpMethod: GET
-      ResourceId: MyApiGatewayResource
-      RestApiId: MyApiGateway
+      ResourceId: !Ref MyApiGatewayResource
+      RestApiId: !Ref MyApiGateway
       Integration:
         IntegrationHttpMethod: POST
         Type: MOCK
