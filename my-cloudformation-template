@@ -1,158 +1,139 @@
-AWSTemplateFormatVersion: '2010-09-09'
+---
+AWSTemplateFormatVersion: 2010-09-09
 Resources:
-  # S3 Bucket to store Lambda and Glue code
   MyS3Bucket:
-    Type: 'AWS::S3::Bucket'
+    Type: AWS::S3::Bucket
     Properties:
       BucketName: my-cloudformation-s3-bucket
-
-  # IAM Role for Lambda
   MyLambdaExecutionRole:
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: 2012-10-17
         Statement:
-          - Effect: 'Allow'
+          - Effect: Allow
             Principal:
-              Service: 'lambda.amazonaws.com'
-            Action: 'sts:AssumeRole'
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
       Policies:
-        - PolicyName: 'LambdaExecutionPolicy'
+        - PolicyName: LambdaExecutionPolicy
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: 2012-10-17
             Statement:
-              - Effect: 'Allow'
+              - Effect: Allow
                 Action:
-                  - 's3:GetObject'
-                  - 'logs:*'
-                  - 'sns:Publish'
-                Resource: 
-                  - !Sub 'arn:aws:s3:::${MyS3Bucket}/*'
+                  - s3:GetObject
+                  - logs:*
+                  - sns:Publish
+                Resource:
+                  - arn:aws:s3:::${MyS3Bucket}/*
                   - arn:aws:logs:*:*:*
                   - arn:aws:sns:REGION:ACCOUNT_ID:MySNSTopic
-
-  # Lambda Function
   MyLambdaFunction:
-    Type: 'AWS::Lambda::Function'
+    Type: AWS::Lambda::Function
     Properties:
       FunctionName: my-lambda-function
       Handler: index.handler
-      Role: !GetAtt MyLambdaExecutionRole.Arn
+      Role: MyLambdaExecutionRole.Arn
       Code:
         S3Bucket: my-cloudformation-s3-bucket
         S3Key: lambda-code.zip
       Runtime: nodejs14.x
-
-  # IAM Role for Glue
   MyGlueExecutionRole:
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: 2012-10-17
         Statement:
-          - Effect: 'Allow'
+          - Effect: Allow
             Principal:
-              Service: 'glue.amazonaws.com'
-            Action: 'sts:AssumeRole'
+              Service: glue.amazonaws.com
+            Action: sts:AssumeRole
       Policies:
-        - PolicyName: 'GlueExecutionPolicy'
+        - PolicyName: GlueExecutionPolicy
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: 2012-10-17
             Statement:
-              - Effect: 'Allow'
+              - Effect: Allow
                 Action:
-                  - 's3:GetObject'
-                  - 's3:PutObject'
-                  - 's3:ListBucket'
-                  - 'logs:*'
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                  - logs:*
                 Resource:
-                  - !Sub 'arn:aws:s3:::${MyS3Bucket}/*'
+                  - arn:aws:s3:::${MyS3Bucket}/*
                   - arn:aws:logs:*:*:*
-
-  # Glue Job
   MyGlueJob:
-    Type: 'AWS::Glue::Job'
+    Type: AWS::Glue::Job
     Properties:
       Name: my-glue-job
-      Role: !GetAtt MyGlueExecutionRole.Arn
+      Role: MyGlueExecutionRole.Arn
       Command:
-        Name: 'glueetl'
-        ScriptLocation: 's3://my-cloudformation-s3-bucket/glue-scripts/my-glue-script.py'
+        Name: glueetl
+        ScriptLocation: s3://my-cloudformation-s3-bucket/glue-scripts/my-glue-script.py
       MaxCapacity: 10
-
-  # IAM Role for Step Functions
   MyStepFunctionsRole:
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: 2012-10-17
         Statement:
-          - Effect: 'Allow'
+          - Effect: Allow
             Principal:
-              Service: 'states.amazonaws.com'
-            Action: 'sts:AssumeRole'
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
       Policies:
-        - PolicyName: 'StepFunctionsExecutionPolicy'
+        - PolicyName: StepFunctionsExecutionPolicy
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: 2012-10-17
             Statement:
-              - Effect: 'Allow'
+              - Effect: Allow
                 Action:
-                  - 'lambda:InvokeFunction'
+                  - lambda:InvokeFunction
                 Resource: arn:aws:lambda:REGION:ACCOUNT_ID:function:my-lambda-function
-
-  # Step Functions State Machine
   MyStepFunctionsStateMachine:
-    Type: 'AWS::StepFunctions::StateMachine'
+    Type: AWS::StepFunctions::StateMachine
     Properties:
       StateMachineName: my-step-functions-state-machine
-      RoleArn: !GetAtt MyStepFunctionsRole.Arn
-      DefinitionString: '{"StartAt": "HelloWorld", "States": {"HelloWorld": {"Type": "Pass", "Result": "Hello, World!", "End": true}}}'
-
-  # IAM Role for EventBridge
+      RoleArn: MyStepFunctionsRole.Arn
+      DefinitionString: '{"StartAt": "HelloWorld", "States": {"HelloWorld": {"Type":
+        "Pass", "Result": "Hello, World!", "End": true}}}'
   MyEventBridgeRole:
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: 2012-10-17
         Statement:
-          - Effect: 'Allow'
+          - Effect: Allow
             Principal:
-              Service: 'events.amazonaws.com'
-            Action: 'sts:AssumeRole'
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
       Policies:
-        - PolicyName: 'EventBridgeExecutionPolicy'
+        - PolicyName: EventBridgeExecutionPolicy
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: 2012-10-17
             Statement:
-              - Effect: 'Allow'
+              - Effect: Allow
                 Action:
-                  - 'lambda:InvokeFunction'
+                  - lambda:InvokeFunction
                 Resource: arn:aws:lambda:REGION:ACCOUNT_ID:function:my-lambda-function
-
-  # EventBridge Bus
   MyEventBridgeBus:
-    Type: 'AWS::Events::EventBus'
+    Type: AWS::Events::EventBus
     Properties:
       Name: my-event-bus
-
-  # EventBridge Rule
   MyEventBridgeRule:
-    Type: 'AWS::Events::Rule'
+    Type: AWS::Events::Rule
     Properties:
       Name: my-event-rule
-      EventBusName: !Ref MyEventBridgeBus
+      EventBusName: MyEventBridgeBus
       EventPattern:
         source:
-          - "aws.s3"
+          - aws.s3
       Targets:
         - Arn: arn:aws:lambda:REGION:ACCOUNT_ID:function:my-lambda-function
-          Id: "LambdaTarget"
-
-  # CloudWatch Alarm
+          Id: LambdaTarget
   MyCloudWatchAlarm:
-    Type: 'AWS::CloudWatch::Alarm'
+    Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: my-cloudwatch-alarm
       MetricName: CPUUtilization
@@ -164,57 +145,43 @@ Resources:
       EvaluationPeriods: 1
       AlarmActions:
         - arn:aws:sns:REGION:ACCOUNT_ID:MySNSTopic
-
-  # SNS Topic
   MySNSTopic:
-    Type: 'AWS::SNS::Topic'
+    Type: AWS::SNS::Topic
     Properties:
       TopicName: my-sns-topic
-
-  # SNS Subscription
   MySNSSubscription:
-    Type: 'AWS::SNS::Subscription'
+    Type: AWS::SNS::Subscription
     Properties:
-      Endpoint: "your-email@example.com"
-      Protocol: "email"
-      TopicArn: !Ref MySNSTopic
-
-  # SQS Queue
+      Endpoint: your-email@example.com
+      Protocol: email
+      TopicArn: MySNSTopic
   MySQSQueue:
-    Type: 'AWS::SQS::Queue'
+    Type: AWS::SQS::Queue
     Properties:
       QueueName: my-sqs-queue
-
-  # Secrets Manager Secret
   MySecret:
-    Type: 'AWS::SecretsManager::Secret'
+    Type: AWS::SecretsManager::Secret
     Properties:
       Name: my-secret
       SecretString: '{"username":"admin","password":"mypassword123"}'
-
-  # API Gateway
   MyApiGateway:
-    Type: 'AWS::ApiGateway::RestApi'
+    Type: AWS::ApiGateway::RestApi
     Properties:
       Name: my-api-gateway
-      Description: "My API Gateway"
-
-  # API Gateway Resource
+      Description: My API Gateway
   MyApiGatewayResource:
-    Type: 'AWS::ApiGateway::Resource'
+    Type: AWS::ApiGateway::Resource
     Properties:
-      ParentId: !GetAtt MyApiGateway.RootResourceId
+      ParentId: MyApiGateway.RootResourceId
       PathPart: mypath
-      RestApiId: !Ref MyApiGateway
-
-  # API Gateway Method
+      RestApiId: MyApiGateway
   MyApiGatewayMethod:
-    Type: 'AWS::ApiGateway::Method'
+    Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       HttpMethod: GET
-      ResourceId: !Ref MyApiGatewayResource
-      RestApiId: !Ref MyApiGateway
+      ResourceId: MyApiGatewayResource
+      RestApiId: MyApiGateway
       Integration:
         IntegrationHttpMethod: POST
         Type: MOCK
