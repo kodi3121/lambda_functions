@@ -30,7 +30,7 @@ phases:
       - echo "Deploying CloudFormation stack..."
       - aws cloudformation deploy \
           --stack-name $STACK_NAME \
-          --template-file my-cloudformation-template.yaml \
+          --template-file my-cloudformation-template.yml \
           --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 
   post_build:
