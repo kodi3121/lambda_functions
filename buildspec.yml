@@ -1,15 +1,20 @@
 version: 0.2
 
 phases:
+  install:
+    commands:
+      - echo "Installing zip utility"
+      - yum install -y zip  # Install the zip utility for Amazon Linux
+
   build:
     commands:
       - echo "This is build phase... Zipping my lambda function"
       - zip -r /tmp/deployment_package.zip lambda_function.py
-      - ls -al /tmp  # List files to verify the zip file is created
+      - ls -al /tmp  # List files in /tmp to verify the zip file is created
 
   post_build:
     commands:
-      - echo "Listing files in post-build phase"
+      - echo "Listing files in /tmp"
       - ls -al /tmp  # Ensure the zip file is in /tmp directory
       - echo "Deploying to the Lambda"
       - aws lambda update-function-code --function-name lambda-function-demo --zip-file fileb:///tmp/deployment_package.zip
