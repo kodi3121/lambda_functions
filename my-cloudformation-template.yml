@@ -1,10 +1,23 @@
-AWSTemplateFormatVersion: 2010-09-09
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create an S3 bucket using CloudFormation
+
 Resources:
-  # S3 Bucket
   MyS3Bucket:
-    Type: AWS::S3::Bucket
+    Type: 'AWS::S3::Bucket'
     Properties:
-      BucketName: s3-bucket-kodisri
+      BucketName: my-kodi-bucket2002
+      AccessControl: public
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldVersions
+            Status: Enabled
+            ExpirationInDays: 365
+      Tags:
+        - Key: Environment
+          Value: dev
+
 
   # # Lambda Function
   # MyLambdaFunction:
