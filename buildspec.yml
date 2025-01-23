@@ -3,25 +3,27 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      python: 3.8
+      java: corretto8  # You can replace with a different version or runtime if necessary
     commands:
       - echo Installing AWS CLI
-      - pip install awscli
+      - curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      - unzip awscliv2.zip
+      - sudo ./aws/install
 
   pre_build:
     commands:
       - echo Logging into AWS CLI
-      - aws sts get-caller-identity # Verifies AWS CLI authentication
+      - aws sts get-caller-identity
 
   build:
     commands:
       - echo Running build commands
-      - # Add any other build commands (e.g., compiling code, running tests, etc.)
+      - # Add build commands here
 
   post_build:
     commands:
       - echo Deploying CloudFormation Stack
-      - aws cloudformation create-stack --stack-name kodi-stack --template-body file://my-cloudformation-template.yml --capabilities CAPABILITY_NAMED_IAM
+      - aws cloudformation create-stack --stack-name my-stack --template-body file://my-cloudformation-template.yml --capabilities CAPABILITY_NAMED_IAM
       - echo CloudFormation Stack creation initiated
 
 artifacts:
