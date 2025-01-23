@@ -18,7 +18,7 @@ phases:
   post_build:
     commands:
       - echo Deploying CloudFormation Stack
-      - aws cloudformation create-stack --stack-name my-kodi-stack --template-body file://my-cloudformation-template.yml --capabilities CAPABILITY_NAMED_IAM
+      - aws cloudformation create-stack --stack-name my-kodi2002-stack --template-body file://my-cloudformation-template.yml --capabilities CAPABILITY_NAMED_IAM
       - echo CloudFormation Stack creation initiated
 
 artifacts:
